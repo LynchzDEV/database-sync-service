@@ -1,0 +1,26 @@
+services:
+  db01:
+    image: postgres:17-alpine
+    container_name: db01
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: dbuser01
+      POSTGRES_PASSWORD: dbpass01
+      POSTGRES_DB: db01
+    volumes:
+      - db01:/var/lib/postgresql/data
+  db02:
+    image: postgres:17-alpine
+    container_name: db02
+    ports:
+      - 5433:5432
+    environment:
+      POSTGRES_USER: dbuser02
+      POSTGRES_PASSWORD: dbpass02
+      POSTGRES_DB: db02
+    volumes:
+      - db02:/var/lib/postgresql/data
+volumes:
+  db01:
+  db02:

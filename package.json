@@ -1,0 +1,43 @@
+{
+  "name": "db-sync-service",
+  "version": "1.0.0",
+  "description": "Real-time one-way database synchronization service with CLI management",
+  "main": "dist/service/sync-service.js",
+  "bin": {
+    "db-sync": "./dist/cli/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "npm run build && node dist/service/daemon.js",
+    "cli": "npm run build && node dist/cli/index.js",
+    "dev": "ts-node src/service/daemon.ts",
+    "dev:cli": "ts-node src/cli/index.ts",
+    "watch": "tsc --watch"
+  },
+  "keywords": ["database", "sync", "replication", "mysql", "postgresql", "real-time"],
+  "author": "LynchzDEV",
+  "license": "MIT",
+  "dependencies": {
+    "mysql2": "^3.6.5",
+    "pg": "^8.11.3",
+    "commander": "^11.1.0",
+    "inquirer": "^9.2.12",
+    "chalk": "^4.1.2",
+    "winston": "^3.11.0",
+    "node-cron": "^3.0.3",
+    "dotenv": "^16.3.1",
+    "cli-table3": "^0.6.3",
+    "ora": "^5.4.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "typescript": "^5.3.3",
+    "ts-node": "^10.9.2",
+    "@types/node": "^20.10.6",
+    "@types/inquirer": "^9.0.7",
+    "@types/pg": "^8.10.9"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
