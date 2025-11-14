@@ -78,13 +78,23 @@ export class DataSync {
             const rowsSynced = await this.fullTableSync(tableName);
             totalRowsSynced += rowsSynced;
             logger.info(`Initial sync: ${rowsSynced} rows for table: ${tableName}`);
-
-            // Initialize sync state
-            this.syncState.set(tableName, {
-              lastSyncTime: new Date(),
-              rowCount: rowsSynced
-            });
+          } else {
+            // Target has data, perform comprehensive sync to catch any differences
+            const primaryKey = await this.targetAdapter.getPrimaryKey(tableName);
+            if (primaryKey) {
+              const rowsSynced = await this.primaryKeyBasedSync(tableName, primaryKey);
+              totalRowsSynced += rowsSynced;
+              if (rowsSynced > 0) {
+                logger.info(`Initial sync: ${rowsSynced} rows synced for table: ${tableName}`);
+              }
+            }
           }
+
+          // Initialize sync state for all tables
+          this.syncState.set(tableName, {
+            lastSyncTime: new Date(),
+            rowCount: 0 // Will be updated on next sync
+          });
         } catch (error) {
           const errorMsg = `Error in initial sync for table ${tableName}: ${(error as Error).message}`;
           logger.error(errorMsg);
@@ -124,14 +134,16 @@ export class DataSync {
   }
 
   private async syncTable(tableName: string): Promise<number> {
-    // Check if table has timestamp column for tracking changes
-    const hasTimestamp = await this.hasTimestampColumn(tableName);
+    // Always use comprehensive primary key based sync for reliability
+    // This detects INSERT, UPDATE, and DELETE operations
+    const primaryKey = await this.targetAdapter.getPrimaryKey(tableName);
 
-    if (hasTimestamp) {
-      return await this.timestampBasedSync(tableName);
+    if (primaryKey) {
+      return await this.primaryKeyBasedSync(tableName, primaryKey);
     } else {
-      // Fall back to row count comparison
-      return await this.rowCountBasedSync(tableName);
+      // Fall back to full sync if no primary key
+      logger.warn(`Table ${tableName} has no primary key, using full sync`);
+      return await this.fullTableSync(tableName);
     }
   }
 
@@ -245,6 +257,130 @@ export class DataSync {
     }
 
     return rows.length;
+  }
+
+  private async primaryKeyBasedSync(tableName: string, primaryKey: string): Promise<number> {
+    try {
+      let totalRowsAffected = 0;
+
+      // Get all primary keys from source and target
+      const sourceRows = await this.sourceAdapter.query(
+        `SELECT ${this.sourceAdapter.escapeIdentifier(primaryKey)} FROM ${this.sourceAdapter.escapeIdentifier(tableName)}`
+      );
+      const sourcePKs = new Set(sourceRows.map((row: any) => row[primaryKey]));
+
+      const targetRows = await this.targetAdapter.query(
+        `SELECT ${this.targetAdapter.escapeIdentifier(primaryKey)} FROM ${this.targetAdapter.escapeIdentifier(tableName)}`
+      );
+      const targetPKs = new Set(targetRows.map((row: any) => row[primaryKey]));
+
+      // 1. Find NEW rows (INSERT) - exist in source but not in target
+      const newPKs = Array.from(sourcePKs).filter((pk: any) => !targetPKs.has(pk));
+
+      if (newPKs.length > 0) {
+        // Fetch full rows for new PKs
+        const placeholders = newPKs.map((_: any, idx: number) => `$${idx + 1}`).join(',');
+        const dbType = this.sourceAdapter.constructor.name.toLowerCase();
+
+        let selectQuery: string;
+        if (dbType.includes('postgres')) {
+          selectQuery = `SELECT * FROM ${this.sourceAdapter.escapeIdentifier(tableName)}
+                        WHERE ${this.sourceAdapter.escapeIdentifier(primaryKey)} IN (${placeholders})`;
+        } else {
+          const mysqlPlaceholders = newPKs.map(() => '?').join(',');
+          selectQuery = `SELECT * FROM ${this.sourceAdapter.escapeIdentifier(tableName)}
+                        WHERE ${this.sourceAdapter.escapeIdentifier(primaryKey)} IN (${mysqlPlaceholders})`;
+        }
+
+        const newRows = await this.sourceAdapter.query(selectQuery, newPKs);
+
+        if (newRows.length > 0) {
+          await this.targetAdapter.insertRows(tableName, newRows);
+          totalRowsAffected += newRows.length;
+          logger.info(`Inserted ${newRows.length} new rows in table: ${tableName}`);
+        }
+      }
+
+      // 2. Find UPDATED rows - exist in both but may have different data
+      const commonPKs = Array.from(sourcePKs).filter((pk: any) => targetPKs.has(pk));
+
+      if (commonPKs.length > 0 && await this.hasTimestampColumn(tableName)) {
+        // Only check for updates if table has timestamp column (more efficient)
+        const timestampColumn = await this.getTimestampColumn(tableName);
+
+        if (timestampColumn) {
+          // Get rows with recent timestamps from source
+          const state = this.syncState.get(tableName);
+
+          if (state && state.lastSyncTime) {
+            const updatedRows = await this.sourceAdapter.selectWhere(
+              tableName,
+              timestampColumn,
+              state.lastSyncTime
+            );
+
+            if (updatedRows.length > 0) {
+              await this.targetAdapter.upsertRows(tableName, updatedRows, primaryKey);
+              totalRowsAffected += updatedRows.length;
+              logger.info(`Updated ${updatedRows.length} rows in table: ${tableName}`);
+            }
+          }
+        }
+      }
+
+      // 3. Find DELETED rows - exist in target but not in source
+      const deletedPKs = Array.from(targetPKs).filter((pk: any) => !sourcePKs.has(pk));
+
+      if (deletedPKs.length > 0) {
+        const deletedCount = await this.executeBatchDeletes(tableName, primaryKey, deletedPKs);
+        totalRowsAffected += deletedCount;
+        if (deletedCount > 0) {
+          logger.info(`Deleted ${deletedCount} rows from table: ${tableName}`);
+        }
+      }
+
+      // Update sync state
+      if (totalRowsAffected > 0) {
+        this.syncState.set(tableName, {
+          lastSyncTime: new Date(),
+          rowCount: totalRowsAffected
+        });
+      }
+
+      return totalRowsAffected;
+    } catch (error) {
+      logger.error(`Error in primary key based sync for table ${tableName}:`, error);
+      return 0;
+    }
+  }
+
+  private async executeBatchDeletes(tableName: string, primaryKey: string, deletedPKs: any[]): Promise<number> {
+    try {
+      const batchSize = 100;
+      for (let i = 0; i < deletedPKs.length; i += batchSize) {
+        const batch = deletedPKs.slice(i, i + batchSize);
+        const placeholders = batch.map((_: any, idx: number) => `$${idx + 1}`).join(',');
+
+        const dbType = this.targetAdapter.constructor.name.toLowerCase();
+        let deleteQuery: string;
+
+        if (dbType.includes('postgres')) {
+          deleteQuery = `DELETE FROM ${this.targetAdapter.escapeIdentifier(tableName)}
+                        WHERE ${this.targetAdapter.escapeIdentifier(primaryKey)} IN (${placeholders})`;
+          await this.targetAdapter.query(deleteQuery, batch);
+        } else {
+          const mysqlPlaceholders = batch.map(() => '?').join(',');
+          deleteQuery = `DELETE FROM ${this.targetAdapter.escapeIdentifier(tableName)}
+                        WHERE ${this.targetAdapter.escapeIdentifier(primaryKey)} IN (${mysqlPlaceholders})`;
+          await this.targetAdapter.query(deleteQuery, batch);
+        }
+      }
+
+      return deletedPKs.length;
+    } catch (error) {
+      logger.error(`Error executing batch deletes:`, error);
+      return 0;
+    }
   }
 
   private async detectAndSyncDeletes(tableName: string, primaryKey: string): Promise<number> {
