@@ -1,6 +1,7 @@
 import blessed from 'blessed';
 import contrib from 'blessed-contrib';
 import configManager from '../../config/config-manager';
+import { ServiceController } from '../../utils/service-controller';
 import fs from 'fs';
 import path from 'path';
 
@@ -160,62 +161,59 @@ export class DashboardScreen {
       left: 0,
       width: '100%',
       height: 1,
-      content: '{center}[1]Dashboard [2]Connections [3]Sync Pairs [4]Logs [?]Help [R]Refresh [Q]Quit{/}',
+      content: '{center}[S]Start/Stop Service [T]Theme [1-4]Screens [?]Help [R]Refresh [Q]Quit{/}',
       tags: true,
       style: {
         fg: 'black',
         bg: 'cyan'
       }
     });
+
+    // Add service toggle key handler
+    this.container.key(['s'], () => {
+      this.handleServiceToggle();
+    });
   }
 
   private updateServiceStatus(): void {
-    const pidFile = path.join(process.cwd(), '.db-sync', 'service.pid');
-    const isRunning = fs.existsSync(pidFile) && (() => {
-      try {
-        const pid = fs.readFileSync(pidFile, 'utf8').trim();
-        process.kill(Number(pid), 0);
-        return true;
-      } catch {
-        return false;
-      }
-    })();
+    const serviceStatus = ServiceController.getStatus();
 
-    const status = isRunning
+    const status = serviceStatus.isRunning
       ? '{green-fg}{bold}● RUNNING{/}'
       : '{red-fg}{bold}○ STOPPED{/}';
 
-    const pid = isRunning ? fs.readFileSync(pidFile, 'utf8').trim() : 'N/A';
+    const pid = serviceStatus.pid || 'N/A';
+    const uptime = serviceStatus.uptime || 'N/A';
 
     this.serviceStatus.setContent(
       '\n' +
       `  Status:  ${status}\n` +
       `  PID:     ${pid}\n` +
-      `  Uptime:  ${isRunning ? this.getUptime(pidFile) : 'N/A'}\n` +
+      `  Uptime:  ${uptime}\n` +
       '\n' +
       `  {cyan-fg}Press 's' to start/stop service{/}`
     );
   }
 
-  private getUptime(pidFile: string): string {
-    try {
-      const stats = fs.statSync(pidFile);
-      const startTime = stats.mtimeMs;
-      const uptime = Date.now() - startTime;
-      const seconds = Math.floor(uptime / 1000);
-      const minutes = Math.floor(seconds / 60);
-      const hours = Math.floor(minutes / 60);
+  private async handleServiceToggle(): Promise<void> {
+    const serviceStatus = ServiceController.getStatus();
+    let result;
 
-      if (hours > 0) {
-        return `${hours}h ${minutes % 60}m`;
-      } else if (minutes > 0) {
-        return `${minutes}m ${seconds % 60}s`;
-      } else {
-        return `${seconds}s`;
-      }
-    } catch {
-      return 'N/A';
+    if (serviceStatus.isRunning) {
+      result = await ServiceController.stop();
+    } else {
+      result = await ServiceController.start();
     }
+
+    // Show message in activity log
+    if (result.success) {
+      this.activityLog.log(`{green-fg}✓ ${result.message}{/}`);
+    } else {
+      this.activityLog.log(`{red-fg}✗ ${result.message}{/}`);
+    }
+
+    // Refresh dashboard
+    this.refresh();
   }
 
   private updateStats(): void {

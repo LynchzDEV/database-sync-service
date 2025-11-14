@@ -6,6 +6,7 @@ import { ConnectionsScreen } from './screens/connections';
 import { SyncPairsScreen } from './screens/sync-pairs';
 import { LogsScreen } from './screens/logs';
 import { HelpScreen } from './screens/help';
+import { ThemeManager } from './theme-manager';
 
 export class TUIApp {
   private screen: blessed.Widgets.Screen;
@@ -13,6 +14,10 @@ export class TUIApp {
   private screens: Map<string, any>;
 
   constructor() {
+    // Load theme
+    ThemeManager.loadTheme();
+    const colors = ThemeManager.getColors();
+
     // Create the main screen
     this.screen = blessed.screen({
       smartCSR: true,
@@ -21,7 +26,7 @@ export class TUIApp {
         artificial: true,
         shape: 'line',
         blink: true,
-        color: 'white'
+        color: colors.text
       }
     });
 
@@ -59,6 +64,60 @@ export class TUIApp {
         this.currentScreen.refresh();
       }
     });
+
+    // Toggle theme
+    this.screen.key(['t'], () => {
+      this.toggleTheme();
+    });
+  }
+
+  private toggleTheme(): void {
+    const newTheme = ThemeManager.toggleTheme();
+
+    // Show notification
+    const notification = blessed.box({
+      parent: this.screen,
+      top: 'center',
+      left: 'center',
+      width: 40,
+      height: 5,
+      content: `\n  {center}Theme switched to: ${newTheme}{/}`,
+      tags: true,
+      border: { type: 'line' },
+      style: {
+        border: { fg: 'cyan' }
+      }
+    });
+
+    this.screen.render();
+
+    // Auto-close notification and restart TUI
+    setTimeout(() => {
+      notification.destroy();
+      this.screen.render();
+
+      // Suggest restart
+      const restartMsg = blessed.box({
+        parent: this.screen,
+        top: 'center',
+        left: 'center',
+        width: 50,
+        height: 7,
+        content: `\n  {center}Theme changed to ${newTheme}!{/}\n\n  {center}Restart TUI to apply theme fully{/}\n  {center}(Press any key to continue){/}`,
+        tags: true,
+        border: { type: 'line' },
+        style: {
+          border: { fg: 'yellow' }
+        }
+      });
+
+      this.screen.once('keypress', () => {
+        restartMsg.destroy();
+        this.screen.render();
+      });
+
+      this.screen.render();
+    }, 1000);
   }
 
   showScreen(name: string): void {
