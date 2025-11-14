@@ -2,73 +2,97 @@
 
 ![Screen Recording Nov 14 2568 (3)](https://github.com/user-attachments/assets/f841ee04-d4fb-4a35-851a-e079700854af)
 
-A real-time one-way database synchronization service with CLI management. Continuously monitors a source database and synchronizes changes (schema, data, and stored procedures) to a target database.
+A real-time one-way database synchronization service with interactive Terminal UI and CLI management. Continuously monitors a source database and synchronizes **all changes** (INSERT, UPDATE, DELETE, schema modifications, and stored procedures) to a target database.
 
-## Features
+## ✨ Features
 
-- **Real-time Synchronization**: Continuous monitoring with configurable polling intervals
-- **Schema Synchronization**: Automatically syncs table structures, columns, and indexes
-- **Data Synchronization**: Timestamp-based or row count-based data replication
-- **Procedures & Functions**: Syncs stored procedures, functions, and triggers
-- **CLI Management**: Interactive command-line interface for easy configuration
-- **Background Service**: Runs as a daemon process with graceful shutdown
-- **Flexible Filtering**: Include/exclude specific tables from synchronization
-- **Comprehensive Logging**: Detailed logs with multiple severity levels
+### Core Functionality
+- **🔄 Real-Time Synchronization**: Continuous monitoring with configurable polling intervals (default: 5 seconds)
+- **✅ Complete DML Support**: Detects and syncs INSERT, UPDATE, and DELETE operations
+- **📊 Schema Synchronization**: Automatically syncs table structures, columns, and indexes
+- **⚙️ Procedures & Functions**: Syncs stored procedures, functions, and triggers
+- **🗄️ Multi-Database Support**: Works with both **MySQL** and **PostgreSQL** databases
+- **🎯 Primary Key Based Detection**: Reliable change detection without requiring timestamp columns
 
-## Installation
+### User Interface
+- **🖥️ Terminal User Interface (TUI)**: Beautiful interactive dashboard with real-time monitoring
+- **💻 CLI Management**: Comprehensive command-line interface for configuration
+- **🎨 Theme Support**: Switch between light and dark themes
+- **📈 Live Statistics**: Real-time service status, connection info, and sync activity
+
+### Advanced Features
+- **🔧 Service Control**: Start/stop service directly from TUI or CLI
+- **🔍 Table Filtering**: Include/exclude specific tables from synchronization
+- **📝 Comprehensive Logging**: Detailed logs with multiple severity levels and color coding
+- **🛡️ Error Handling**: Graceful error recovery with automatic retries
+- **⚡ Performance Optimized**: Batch operations and efficient primary key comparison
+
+## 🚀 Quick Start
+
+### 1. Installation
 
 ```bash
 npm install
 ```
 
-## Quick Start
-
-### 1. Build the Project
+### 2. Build the Project
 
 ```bash
 npm run build
 ```
 
-### 2. Add Database Connections
+### 3. Launch Terminal UI (Recommended)
 
 ```bash
+npm run tui
+```
+
+**TUI Features:**
+- **Dashboard**: Real-time service status, statistics, and activity logs
+- **Connections Manager**: Add, test, and manage database connections
+- **Sync Pairs Manager**: Configure and monitor sync pairs
+- **Logs Viewer**: Live log streaming with color-coded severity levels
+- **Help Screen**: Comprehensive keyboard shortcuts and documentation
+
+**Keyboard Shortcuts:**
+- `1` - Dashboard
+- `2` - Connections Manager
+- `3` - Sync Pairs Manager
+- `4` - Logs Viewer
+- `?` or `H` - Help
+- `S` - Start/Stop Service (on dashboard)
+- `T` - Toggle Light/Dark Theme
+- `R` - Refresh Current Screen
+- `Q` or `Ctrl-C` - Quit
+
+### 4. Alternative: CLI Setup
+
+If you prefer CLI instead of TUI:
+
+```bash
+# Add database connections
 npm run cli connection add
-```
 
-Follow the interactive prompts to add your source and target database connections.
-
-### 3. Create a Sync Pair
-
-```bash
+# Create a sync pair
 npm run cli sync add
-```
 
-Select your source and target databases, and configure what to synchronize.
-
-### 4. Start the Service
-
-```bash
-# Run in foreground (for testing)
-npm run cli service start
-
-# Run as background daemon
+# Start the service
 npm run cli service start --daemon
 ```
 
-### 5. Check Status
+## 📖 Detailed Usage
 
-```bash
-# One-time status check
-npm run cli status
+### Managing Database Connections
 
-# Watch status in real-time
-npm run cli status --watch
-```
+#### Using TUI
+1. Press `2` to open Connections Manager
+2. Press `A` to add a new connection
+3. Select database type (PostgreSQL or MySQL)
+4. Enter connection details (host, port, database, username, password)
+5. Press `T` to test the connection
+6. Press `←` to return to dashboard
 
-## CLI Commands
-
-### Connection Management
-
+#### Using CLI
 ```bash
 # Add a new database connection
 npm run cli connection add
@@ -83,8 +107,29 @@ npm run cli connection test <name>
 npm run cli connection remove <name>
 ```
 
-### Sync Pair Management
+**Connection Details:**
+- **Database Type**: PostgreSQL or MySQL
+- **Host**: Database server hostname/IP
+- **Port**: Default 5432 (PostgreSQL) or 3306 (MySQL)
+- **Database Name**: Name of the database to connect to
+- **Username**: Database user
+- **Password**: Database password
 
+### Managing Sync Pairs
+
+#### Using TUI
+1. Press `3` to open Sync Pairs Manager
+2. Press `A` to add a new sync pair
+3. Select source database (data will be pulled from here)
+4. Select target database (data will be pushed here)
+5. Configure sync options:
+   - Schema Sync (table structure)
+   - Data Sync (table data)
+   - Procedures Sync (stored procedures/functions)
+6. Optional: Configure table filters (include/exclude)
+7. Press `E` to enable/disable sync pair
+
+#### Using CLI
 ```bash
 # Add a new sync pair
 npm run cli sync add
@@ -104,10 +149,18 @@ npm run cli sync remove <name>
 
 ### Service Control
 
+#### Using TUI (Easiest)
+1. Launch TUI: `npm run tui`
+2. Press `S` on the dashboard to start/stop service
+3. Monitor status in real-time on dashboard
+
+#### Using CLI
 ```bash
-# Start the service
+# Start the service in foreground (for testing)
 npm run cli service start
-npm run cli service start --daemon  # Background mode
+
+# Start as background daemon (production)
+npm run cli service start --daemon
 
 # Stop the service
 npm run cli service stop
@@ -119,182 +172,515 @@ npm run cli service restart
 npm run cli service status
 ```
 
-### Status & Monitoring
+### Monitoring & Status
 
+#### TUI Dashboard
+- **Service Status**: Shows running/stopped with PID and uptime
+- **Statistics**: Connection count, sync pairs, last sync time
+- **Active Connections**: List of configured databases
+- **Sync Pairs**: Current sync pairs with enable/disable status
+- **Recent Activity**: Last 20 log entries with color coding
+- **Auto-refresh**: Updates every 2 seconds
+
+#### CLI Status
 ```bash
-# Show current status
+# One-time status check
 npm run cli status
 
 # Watch status in real-time (updates every 2 seconds)
 npm run cli status --watch
 ```
 
-## Configuration
+## 🔧 Configuration
 
 ### Sync Settings
 
 Configuration is stored in `.db-sync/config.json`. Default settings:
 
-- **Poll Interval**: 5000ms (5 seconds) - How often to check for data changes
-- **Schema Check Interval**: 300000ms (5 minutes) - How often to check for schema changes
-- **Log Level**: `info` - Logging verbosity (error, warn, info, debug)
-- **Max Retries**: 3 - Number of retry attempts on failure
-- **Retry Delay**: 5000ms - Delay between retry attempts
+```json
+{
+  "pollInterval": 5000,           // Data sync check (5 seconds)
+  "schemaCheckInterval": 300000,  // Schema sync check (5 minutes)
+  "logLevel": "info",             // Logging verbosity
+  "maxRetries": 3,                // Retry attempts on failure
+  "retryDelay": 5000              // Delay between retries (5 seconds)
+}
+```
 
-### Connection Configuration
+### Theme Configuration
 
-Each connection requires:
-- Host
-- Port (default: 3306)
-- Username
-- Password
-- Database name
+Theme preference is stored in `.db-sync/theme.json`:
 
-### Sync Pair Options
+```json
+{
+  "theme": "dark"  // or "light"
+}
+```
 
-When creating a sync pair, you can configure:
-- **Schema Sync**: Sync table structures, columns, and indexes
-- **Data Sync**: Sync data records (inserts, updates, deletes)
-- **Procedures Sync**: Sync stored procedures, functions, and triggers
-- **Table Filters**: Include only specific tables or exclude certain tables
+**Change Theme:**
+- In TUI: Press `T` to toggle, then restart TUI
+- Persists between sessions
 
-## How It Works
+## 🔍 How It Works
 
-### One-Way Synchronization
+### Synchronization Algorithm
 
-The service monitors the **source** database for changes and applies them to the **target** database. Changes only flow in one direction (source → target).
+The service uses a **comprehensive primary key based sync** algorithm that reliably detects all DML operations:
 
-### Real-Time Detection
+#### 1. Primary Key Comparison (Every 5 seconds)
 
-The service uses two detection methods:
+```
+Source Database PKs: {1, 2, 3, 4, 5}
+Target Database PKs: {1, 2, 4, 6}
 
-1. **Data Changes** (every 5 seconds by default):
-   - Timestamp-based: Detects rows with `updated_at`, `modified_at`, or similar timestamp columns
-   - Row count-based: Compares row counts and performs full sync if different
-   - Uses `INSERT ... ON DUPLICATE KEY UPDATE` for upserts
+Detection:
+├── INSERT: {3, 5}  ← In source, not in target
+├── UPDATE: {1, 2, 4}  ← Check timestamps if available
+└── DELETE: {6}  ← In target, not in source
+```
 
-2. **Schema Changes** (every 5 minutes by default):
-   - Compares table structures, columns, and indexes
-   - Applies `ALTER TABLE` statements to sync schema
-   - Syncs stored procedures, functions, and triggers
+#### 2. Operation Execution
+
+**INSERT Detection:**
+- Finds primary keys that exist in source but not in target
+- Fetches full row data for new keys
+- Inserts rows into target database
+- Logs: `Inserted X new rows in table: Y`
+
+**UPDATE Detection:**
+- For keys that exist in both databases
+- Uses timestamp columns (if available) to detect changes
+- Upserts modified rows to target
+- Logs: `Updated X rows in table: Y`
+
+**DELETE Detection:**
+- Finds primary keys that exist in target but not in source
+- Deletes orphaned rows from target (batch operations)
+- Logs: `Deleted X rows from table: Y`
+
+#### 3. Schema Synchronization (Every 5 minutes)
+
+- Compares table structures, columns, and indexes
+- Applies `CREATE TABLE` or `ALTER TABLE` statements
+- Syncs stored procedures, functions, and triggers
+- Handles PostgreSQL and MySQL specific syntax
 
 ### Synchronization Flow
 
 ```
-┌─────────────────┐
-│  Initial Sync   │
-│  - Schema       │
-│  - Procedures   │
-│  - Data         │
-└────────┬────────┘
-         │
-         ↓
-┌─────────────────┐     ┌──────────────────┐
-│  Data Polling   │────→│  Apply Changes   │
-│  (Every 5s)     │     │  to Target DB    │
-└─────────────────┘     └──────────────────┘
-         │
-         │
-┌─────────────────┐     ┌──────────────────┐
-│ Schema Polling  │────→│  Apply Changes   │
-│  (Every 5min)   │     │  to Target DB    │
-└─────────────────┘     └──────────────────┘
+┌─────────────────────────────────────────────────────┐
+│              Initial Sync (On Startup)              │
+│  1. Schema Sync     → Create tables/columns/indexes │
+│  2. Procedures Sync → Create procedures/functions   │
+│  3. Data Sync       → Copy all existing data        │
+└──────────────────┬──────────────────────────────────┘
+                   │
+                   ↓
+┌──────────────────────────────────────────────────────┐
+│          Real-Time Data Sync (Every 5s)              │
+│  1. Query all PKs from source and target             │
+│  2. Compare PKs to find INSERT/UPDATE/DELETE         │
+│  3. Execute operations:                              │
+│     - INSERT new rows                                │
+│     - UPDATE changed rows (by timestamp)             │
+│     - DELETE orphaned rows                           │
+└──────────────────────────────────────────────────────┘
+                   │
+                   ↓
+┌──────────────────────────────────────────────────────┐
+│        Schema Sync (Every 5 minutes)                 │
+│  1. Compare table structures                         │
+│  2. Apply ALTER TABLE for changes                    │
+│  3. Sync procedures and functions                    │
+└──────────────────────────────────────────────────────┘
 ```
 
-## Logging
+### Key Benefits
+
+✅ **Works without timestamp columns** - Uses primary key comparison
+✅ **Detects ALL operations** - INSERT, UPDATE, DELETE
+✅ **No data loss** - Comprehensive change detection
+✅ **Efficient** - Batch operations, O(1) lookups with Sets
+✅ **Reliable** - Every change is detected and synced
+✅ **Real-time** - 5-second polling interval (configurable)
+
+## 📁 Project Structure
+
+```
+db-sync/
+├── src/
+│   ├── cli/                    # CLI interface
+│   │   ├── index.ts           # Main CLI entry point
+│   │   └── commands/          # CLI commands
+│   │       ├── connection.ts  # Connection management
+│   │       ├── sync-pair.ts   # Sync pair management
+│   │       ├── service.ts     # Service control
+│   │       └── status.ts      # Status display
+│   ├── tui/                    # Terminal User Interface
+│   │   ├── index.ts           # TUI main application
+│   │   ├── theme-manager.ts   # Theme management
+│   │   └── screens/           # TUI screens
+│   │       ├── dashboard.ts   # Dashboard screen
+│   │       ├── connections.ts # Connections manager
+│   │       ├── sync-pairs.ts  # Sync pairs manager
+│   │       ├── logs.ts        # Logs viewer
+│   │       └── help.ts        # Help screen
+│   ├── service/                # Sync service
+│   │   ├── daemon.ts          # Main daemon process
+│   │   └── sync-service.ts    # Sync orchestrator
+│   ├── modules/                # Sync modules
+│   │   ├── schema/            # Schema synchronization
+│   │   │   └── schema-sync-v2.ts
+│   │   ├── data/              # Data synchronization
+│   │   │   └── data-sync-v2.ts
+│   │   └── procedures/        # Procedures sync
+│   │       └── procedures-sync-v2.ts
+│   ├── adapters/               # Database adapters
+│   │   ├── mysql-adapter.ts   # MySQL implementation
+│   │   ├── postgresql-adapter.ts  # PostgreSQL implementation
+│   │   └── adapter-factory.ts # Adapter factory
+│   ├── config/                 # Configuration management
+│   │   └── config-manager.ts
+│   ├── utils/                  # Utilities
+│   │   ├── database-wrapper.ts
+│   │   ├── service-controller.ts
+│   │   └── logger.ts
+│   └── types/                  # TypeScript types
+│       └── index.ts
+├── logs/                       # Log files
+│   ├── combined.log           # All logs
+│   └── error.log              # Error logs only
+├── .db-sync/                   # Service data
+│   ├── config.json            # Configuration
+│   ├── theme.json             # Theme preference
+│   └── service.pid            # Service process ID
+└── package.json
+```
+
+## 📊 Logging
+
+### Log Files
 
 Logs are written to the `logs/` directory:
 
-- `combined.log`: All logs
-- `error.log`: Error-level logs only
+- **`combined.log`**: All logs (info, warn, error, debug)
+- **`error.log`**: Error-level logs only
 
-Logs include timestamps, severity levels, and detailed information about sync operations.
+### Log Levels
 
-## Development
-
-### Build TypeScript
-
-```bash
-npm run build
+```javascript
+{
+  error: 0,  // Critical errors
+  warn: 1,   // Warnings
+  info: 2,   // General information (default)
+  debug: 3   // Detailed debug information
+}
 ```
 
-### Watch Mode (Auto-rebuild)
+### Log Format
+
+```
+2025-11-14 20:31:33 [info]: 	Starting data synchronization...
+2025-11-14 20:31:33 [info]: 	Inserted 2 new rows in table: users
+2025-11-14 20:31:33 [info]: 	Updated 1 rows in table: orders
+2025-11-14 20:31:33 [info]: 	Deleted 1 rows from table: products
+2025-11-14 20:31:33 [info]: 	Data sync: 4 rows synced
+```
+
+### Viewing Logs
+
+**In TUI:**
+- Press `4` to open Logs Viewer
+- Auto-refreshes every second
+- Color-coded by severity level
+- Press `C` to clear log display
+
+**In Terminal:**
+```bash
+# Follow logs in real-time
+tail -f logs/combined.log
+
+# View errors only
+tail -f logs/error.log
+
+# Search logs
+grep "error" logs/combined.log
+grep "Inserted" logs/combined.log
+```
+
+## 🛠️ Development
+
+### Build
 
 ```bash
+# Build TypeScript
+npm run build
+
+# Watch mode (auto-rebuild on changes)
 npm run watch
 ```
 
-### Run in Development Mode
+### Run in Development
 
 ```bash
+# CLI in development mode
+npm run dev:cli
+
+# TUI in development mode
+npm run dev:tui
+
+# Service in development mode
 npm run dev
 ```
 
-## Architecture
+### Scripts
 
-```
-src/
-├── cli/                  # CLI interface
-│   ├── index.ts         # Main CLI entry point
-│   └── commands/        # CLI commands
-│       ├── connection.ts
-│       ├── sync-pair.ts
-│       ├── service.ts
-│       └── status.ts
-├── service/             # Sync service
-│   ├── daemon.ts        # Main daemon process
-│   └── sync-service.ts  # Sync orchestrator
-├── modules/             # Sync modules
-│   ├── schema/         # Schema synchronization
-│   ├── data/           # Data synchronization
-│   └── procedures/     # Procedures/functions sync
-├── config/              # Configuration management
-│   └── config-manager.ts
-├── utils/               # Utilities
-│   ├── db-connection.ts
-│   └── logger.ts
-└── types/               # TypeScript types
-    └── index.ts
+```json
+{
+  "build": "tsc",
+  "start": "node dist/service/daemon.js",
+  "cli": "node dist/cli/index.js",
+  "tui": "node dist/tui/index.js",
+  "dev": "ts-node src/service/daemon.ts",
+  "dev:cli": "ts-node src/cli/index.ts",
+  "dev:tui": "ts-node src/tui/index.ts",
+  "watch": "tsc --watch"
+}
 ```
 
-## Safety & Best Practices
+## 🔐 Safety & Best Practices
 
-1. **Test First**: Always test with development databases first
-2. **Backup**: Ensure you have backups of your target database
-3. **Monitor**: Use `npm run cli status --watch` to monitor sync operations
-4. **Exclude System Tables**: Use table filters to exclude system/internal tables
-5. **Permissions**: Ensure database users have appropriate permissions (CREATE, ALTER, INSERT, UPDATE, DELETE)
-6. **Network**: Ensure stable network connection between service and databases
+### Before Production
 
-## Limitations
+1. **✅ Test First**: Always test with development databases first
+2. **💾 Backup**: Ensure you have backups of your target database
+3. **📊 Monitor**: Use TUI or `npm run cli status --watch` to monitor operations
+4. **🔍 Review Filters**: Use table filters to exclude system/internal tables
+5. **🔑 Permissions**: Ensure database users have appropriate permissions:
+   - `SELECT` on source database
+   - `CREATE`, `ALTER`, `INSERT`, `UPDATE`, `DELETE` on target database
 
-- Only supports MySQL/MariaDB databases
-- One-way synchronization only (source → target)
-- Requires primary keys for proper update/delete operations
-- Large tables may cause initial sync delays
-- Schema changes with data type changes may require manual intervention
+### Security Recommendations
 
-## Troubleshooting
+- Store database credentials securely
+- Use read-only user for source database (recommended)
+- Restrict network access between service and databases
+- Regularly review sync logs for anomalies
+- Test schema changes in development first
 
-### Service won't start
-- Check if service is already running: `npm run cli service status`
-- Verify database connections: `npm run cli connection test <name>`
-- Check logs in `logs/error.log`
+### Performance Tips
 
-### Sync is slow
-- Adjust poll interval in settings (careful: lower intervals increase load)
-- Add indexes to timestamp columns used for change detection
-- Use table filters to exclude unnecessary tables
+1. **Add Indexes**: Add indexes to primary keys and timestamp columns
+2. **Table Filters**: Exclude large tables that don't need sync
+3. **Adjust Intervals**: Increase poll interval for lower load (trade-off: slower sync)
+4. **Network**: Ensure low-latency network connection to databases
+5. **Monitor**: Use TUI to watch performance metrics
 
-### Missing data
-- Ensure source table has a primary key
-- Check if table is excluded in sync pair configuration
-- Verify table exists in target database
+## ⚠️ Limitations
 
-## License
+- **One-way sync only**: Changes only flow from source → target (target changes are overwritten)
+- **Primary keys required**: Tables without primary keys use full sync (less efficient)
+- **No conflict resolution**: Target changes are overwritten by source
+- **Schema limitations**: Complex schema changes may require manual intervention
+- **Large tables**: Initial sync of very large tables may take time
+- **No DDL detection**: CREATE/DROP TABLE operations require schema check interval to pass
 
-MIT
+## 🐛 Troubleshooting
 
-## Author
+### Service Won't Start
 
-LynchzDEV
+**Check service status:**
+```bash
+npm run cli service status
+```
+
+**Common issues:**
+- Service already running (check PID file in `.db-sync/service.pid`)
+- Database connection failed (test with `npm run cli connection test <name>`)
+- Build not complete (run `npm run build`)
+
+**Solution:**
+```bash
+npm run cli service stop
+npm run build
+npm run cli service start --daemon
+```
+
+### No Data Being Synced
+
+**Symptoms:**
+- Service running but no sync activity in logs
+- New INSERT operations not appearing in target
+
+**Check:**
+1. **Verify connections work:**
+   ```bash
+   npm run cli connection test source-db
+   npm run cli connection test target-db
+   ```
+
+2. **Check sync pair is enabled:**
+   ```bash
+   npm run cli sync list
+   # Look for "Enabled: true"
+   ```
+
+3. **Verify table has primary key:**
+   ```sql
+   -- In source database
+   SHOW KEYS FROM your_table WHERE Key_name = 'PRIMARY';
+
+   -- Or for PostgreSQL
+   SELECT * FROM information_schema.table_constraints
+   WHERE table_name = 'your_table' AND constraint_type = 'PRIMARY KEY';
+   ```
+
+4. **Check logs for errors:**
+   ```bash
+   tail -50 logs/error.log
+   ```
+
+### Sync is Slow
+
+**Symptoms:**
+- Long delays before changes appear in target
+- High CPU/memory usage
+
+**Solutions:**
+
+1. **Adjust poll interval:**
+   - Edit `.db-sync/config.json`
+   - Increase `pollInterval` (e.g., 10000 for 10 seconds)
+   - Restart service
+
+2. **Add indexes:**
+   ```sql
+   -- Add index to timestamp column
+   CREATE INDEX idx_updated_at ON your_table(updated_at);
+   ```
+
+3. **Use table filters:**
+   - Exclude large tables that don't need real-time sync
+   - Configure when creating sync pair
+
+4. **Check network latency:**
+   ```bash
+   ping your-database-host
+   ```
+
+### Missing Data After Sync
+
+**Check:**
+
+1. **Table filtering:**
+   - Verify table is not excluded in sync pair config
+   - Check include/exclude lists
+
+2. **Schema exists:**
+   ```sql
+   -- Verify table exists in target
+   SHOW TABLES LIKE 'your_table';
+   ```
+
+3. **Permission issues:**
+   ```sql
+   -- Test INSERT permission
+   INSERT INTO your_table (col) VALUES ('test');
+   ```
+
+4. **Review sync logs:**
+   ```bash
+   grep "your_table" logs/combined.log
+   ```
+
+### Theme Not Changing
+
+**Issue**: Pressed `T` but theme looks the same
+
+**Solution**:
+1. Press `T` to toggle theme
+2. Wait for confirmation message
+3. **Quit and restart TUI** for theme to apply fully:
+   ```bash
+   # Press Q to quit
+   npm run tui
+   ```
+
+Theme changes are saved to `.db-sync/theme.json` and persist between sessions.
+
+## 🧪 Testing
+
+### Manual Testing Checklist
+
+**INSERT Test:**
+```sql
+-- In source database (db01)
+INSERT INTO users (name, email) VALUES ('Test User', 'test@example.com');
+
+-- Wait 5 seconds
+
+-- In target database (db02)
+SELECT * FROM users WHERE email = 'test@example.com';
+-- ✅ Row should appear
+```
+
+**UPDATE Test:**
+```sql
+-- In source database
+UPDATE users SET name = 'Updated Name' WHERE email = 'test@example.com';
+
+-- Wait 5 seconds
+
+-- In target database
+SELECT name FROM users WHERE email = 'test@example.com';
+-- ✅ Should show 'Updated Name'
+```
+
+**DELETE Test:**
+```sql
+-- In source database
+DELETE FROM users WHERE email = 'test@example.com';
+
+-- Wait 5 seconds
+
+-- In target database
+SELECT * FROM users WHERE email = 'test@example.com';
+-- ✅ Should return empty
+```
+
+**Expected Log Output:**
+```
+[info]: Inserted 1 new rows in table: users
+[info]: Updated 1 rows in table: users
+[info]: Deleted 1 rows from table: users
+```
+
+## 📄 License
+
+MIT License - see LICENSE file for details
+
+## 👤 Author
+
+**LynchzDEV**
+
+## 🤝 Contributing
+
+Contributions, issues, and feature requests are welcome!
+
+1. Fork the project
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 🙏 Acknowledgments
+
+- Built with TypeScript
+- Uses [blessed](https://github.com/chjj/blessed) for Terminal UI
+- Uses [blessed-contrib](https://github.com/yaronn/blessed-contrib) for dashboard widgets
+- Database adapters for MySQL and PostgreSQL
+- Winston for logging
+
+---
+
+**⭐ If you find this project useful, please consider giving it a star!**
