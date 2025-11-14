@@ -1,5 +1,6 @@
 import blessed from 'blessed';
 import configManager from '../../config/config-manager';
+import { ThemeManager } from '../theme-manager';
 
 export class ConnectionsScreen {
   private container: blessed.Widgets.BoxElement;
@@ -20,6 +21,8 @@ export class ConnectionsScreen {
   }
 
   private setupLayout(): void {
+    const colors = ThemeManager.getColors();
+
     // Header
     blessed.box({
       parent: this.container,
@@ -29,7 +32,7 @@ export class ConnectionsScreen {
       height: 3,
       content: '{center}{bold}Database Connections Manager{/}',
       tags: true,
-      style: { fg: 'cyan', bold: true }
+      style: { fg: colors.primary, bold: true }
     });
 
     // Connection list
@@ -44,14 +47,14 @@ export class ConnectionsScreen {
       keys: true,
       vi: true,
       mouse: true,
-      border: { type: 'line', fg: 'cyan' } as any,
+      border: { type: 'line', fg: colors.border } as any,
       style: {
-        selected: { bg: 'blue', fg: 'white' },
-        item: { fg: 'white' }
+        selected: { bg: colors.selected.bg, fg: colors.selected.fg },
+        item: { fg: colors.text }
       },
       scrollbar: {
         ch: '█' as any,
-        style: { fg: 'cyan' }
+        style: { fg: colors.border }
       }
     });
 
@@ -65,12 +68,12 @@ export class ConnectionsScreen {
       label: ' Details ',
       tags: true,
       content: '\n  {cyan-fg}Select a connection to view details{/}',
-      border: { type: 'line', fg: 'cyan' } as any,
+      border: { type: 'line', fg: colors.border } as any,
       scrollable: true,
       alwaysScroll: true,
       scrollbar: {
         ch: '█' as any,
-        style: { fg: 'cyan' }
+        style: { fg: colors.border }
       }
     });
 
@@ -83,7 +86,7 @@ export class ConnectionsScreen {
       height: 1,
       content: '{center}[Enter]Select [T]Test [D]Delete [A]Add [←]Back{/}',
       tags: true,
-      style: { fg: 'black', bg: 'cyan' }
+      style: { fg: colors.statusBar.fg, bg: colors.statusBar.bg }
     });
 
     this.setupEvents();

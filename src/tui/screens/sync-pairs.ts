@@ -1,5 +1,6 @@
 import blessed from 'blessed';
 import configManager from '../../config/config-manager';
+import { ThemeManager } from '../theme-manager';
 
 export class SyncPairsScreen {
   private container: blessed.Widgets.BoxElement;
@@ -20,6 +21,8 @@ export class SyncPairsScreen {
   }
 
   private setupLayout(): void {
+    const colors = ThemeManager.getColors();
+
     blessed.box({
       parent: this.container,
       top: 0,
@@ -28,7 +31,7 @@ export class SyncPairsScreen {
       height: 3,
       content: '{center}{bold}Sync Pairs Manager{/}',
       tags: true,
-      style: { fg: 'cyan', bold: true }
+      style: { fg: colors.primary, bold: true }
     });
 
     this.list = blessed.list({
@@ -42,12 +45,12 @@ export class SyncPairsScreen {
       keys: true,
       vi: true,
       mouse: true,
-      border: { type: 'line', fg: 'cyan' } as any,
+      border: { type: 'line', fg: colors.border } as any,
       style: {
-        selected: { bg: 'blue', fg: 'white' },
-        item: { fg: 'white' }
+        selected: { bg: colors.selected.bg, fg: colors.selected.fg },
+        item: { fg: colors.text }
       },
-      scrollbar: { ch: '█' as any, style: { fg: 'cyan' } }
+      scrollbar: { ch: '█' as any, style: { fg: colors.border } }
     });
 
     this.details = blessed.box({
@@ -59,10 +62,10 @@ export class SyncPairsScreen {
       label: ' Details ',
       tags: true,
       content: '\n  {cyan-fg}Select a sync pair to view details{/}',
-      border: { type: 'line', fg: 'cyan' } as any,
+      border: { type: 'line', fg: colors.border } as any,
       scrollable: true,
       alwaysScroll: true,
-      scrollbar: { ch: '█' as any, style: { fg: 'cyan' } }
+      scrollbar: { ch: '█' as any, style: { fg: colors.border } }
     });
 
     blessed.box({
@@ -73,7 +76,7 @@ export class SyncPairsScreen {
       height: 1,
       content: '{center}[Enter]Select [E]Enable/Disable [D]Delete [A]Add [←]Back{/}',
       tags: true,
-      style: { fg: 'black', bg: 'cyan' }
+      style: { fg: colors.statusBar.fg, bg: colors.statusBar.bg }
     });
 
     this.setupEvents();

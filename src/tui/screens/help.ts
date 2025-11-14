@@ -1,4 +1,5 @@
 import blessed from 'blessed';
+import { ThemeManager } from '../theme-manager';
 
 export class HelpScreen {
   private container: blessed.Widgets.BoxElement;
@@ -18,6 +19,8 @@ export class HelpScreen {
   }
 
   private setupLayout(): void {
+    const colors = ThemeManager.getColors();
+
     blessed.box({
       parent: this.container,
       top: 0,
@@ -26,7 +29,7 @@ export class HelpScreen {
       height: 3,
       content: '{center}{bold}Help & Keyboard Shortcuts{/}',
       tags: true,
-      style: { fg: 'cyan', bold: true }
+      style: { fg: colors.primary, bold: true }
     });
 
     this.helpContent = blessed.box({
@@ -42,10 +45,10 @@ export class HelpScreen {
       keys: true,
       vi: true,
       mouse: true,
-      scrollbar: { ch: '█' as any, style: { fg: 'cyan' } },
-      border: { type: 'line', fg: 'cyan' } as any,
+      scrollbar: { ch: '█' as any, style: { fg: colors.border } },
+      border: { type: 'line', fg: colors.border } as any,
       content: this.getHelpContent(),
-      style: { fg: 'white' }
+      style: { fg: colors.text }
     });
 
     blessed.box({
@@ -56,7 +59,7 @@ export class HelpScreen {
       height: 1,
       content: '{center}[←]Back [↑↓]Scroll{/}',
       tags: true,
-      style: { fg: 'black', bg: 'cyan' }
+      style: { fg: colors.statusBar.fg, bg: colors.statusBar.bg }
     });
 
     this.helpContent.key(['left', 'escape'], () => {

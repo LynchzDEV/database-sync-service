@@ -1,4 +1,5 @@
 import blessed from 'blessed';
+import { ThemeManager } from '../theme-manager';
 import fs from 'fs';
 import path from 'path';
 
@@ -21,6 +22,8 @@ export class LogsScreen {
   }
 
   private setupLayout(): void {
+    const colors = ThemeManager.getColors();
+
     blessed.box({
       parent: this.container,
       top: 0,
@@ -29,7 +32,7 @@ export class LogsScreen {
       height: 3,
       content: '{center}{bold}Real-Time Logs Viewer{/}',
       tags: true,
-      style: { fg: 'cyan', bold: true }
+      style: { fg: colors.primary, bold: true }
     });
 
     this.logBox = blessed.log({
@@ -45,9 +48,9 @@ export class LogsScreen {
       mouse: true,
       scrollable: true,
       alwaysScroll: true,
-      scrollbar: { ch: '█' as any, style: { fg: 'cyan' } },
-      border: { type: 'line', fg: 'cyan' } as any,
-      style: { fg: 'white' }
+      scrollbar: { ch: '█' as any, style: { fg: colors.border } },
+      border: { type: 'line', fg: colors.border } as any,
+      style: { fg: colors.text }
     });
 
     blessed.box({
@@ -58,7 +61,7 @@ export class LogsScreen {
       height: 1,
       content: '{center}[C]Clear [F]Filter [←]Back [↑↓]Scroll{/}',
       tags: true,
-      style: { fg: 'black', bg: 'cyan' }
+      style: { fg: colors.statusBar.fg, bg: colors.statusBar.bg }
     });
 
     this.setupEvents();

@@ -81,9 +81,9 @@ export class TUIApp {
       left: 'center',
       width: 40,
       height: 5,
-      content: `\n  {center}Theme switched to: ${newTheme}{/}`,
+      content: `\n{center}Theme switched to: ${newTheme}{/}`,
       tags: true,
-      border: { type: 'line' },
+      border: { type: 'line' } as any,
       style: {
         border: { fg: 'cyan' }
       }
@@ -103,9 +103,9 @@ export class TUIApp {
         left: 'center',
         width: 50,
         height: 7,
-        content: `\n  {center}Theme changed to ${newTheme}!{/}\n\n  {center}Restart TUI to apply theme fully{/}\n  {center}(Press any key to continue){/}`,
+        content: `\n{center}Theme changed to ${newTheme}!{/}\n\n{center}Restart TUI to apply theme{/}\n{center}Press any key to continue{/}`,
         tags: true,
-        border: { type: 'line' },
+        border: { type: 'line' } as any,
         style: {
           border: { fg: 'yellow' }
         }

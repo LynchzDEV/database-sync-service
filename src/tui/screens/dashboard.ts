@@ -2,6 +2,7 @@ import blessed from 'blessed';
 import contrib from 'blessed-contrib';
 import configManager from '../../config/config-manager';
 import { ServiceController } from '../../utils/service-controller';
+import { ThemeManager } from '../theme-manager';
 import fs from 'fs';
 import path from 'path';
 
@@ -33,6 +34,7 @@ export class DashboardScreen {
   }
 
   private setupHeader(): void {
+    const colors = ThemeManager.getColors();
     const header = blessed.box({
       parent: this.container,
       top: 0,
@@ -44,13 +46,15 @@ export class DashboardScreen {
                '╚═══════════════════════════════════════════════════════════════════════════════╝{/}',
       tags: true,
       style: {
-        fg: 'cyan',
+        fg: colors.primary,
         bold: true
       }
     });
   }
 
   private setupLayout(): void {
+    const colors = ThemeManager.getColors();
+
     // Service Status Box (top-left)
     this.serviceStatus = this.grid.set(0, 0, 3, 6, blessed.box, {
       label: ' Service Status ',
@@ -60,9 +64,9 @@ export class DashboardScreen {
         type: 'line'
       },
       style: {
-        fg: 'white',
+        fg: colors.text,
         border: {
-          fg: 'cyan'
+          fg: colors.border
         }
       }
     });
@@ -70,14 +74,14 @@ export class DashboardScreen {
     // Stats Table (top-right)
     this.statsTable = this.grid.set(0, 6, 3, 6, contrib.table, {
       keys: true,
-      fg: 'white',
-      selectedFg: 'white',
-      selectedBg: 'blue',
+      fg: colors.text,
+      selectedFg: colors.selected.fg,
+      selectedBg: colors.selected.bg,
       interactive: false,
       label: ' Statistics ',
       width: '100%',
       height: '100%',
-      border: { type: 'line', fg: 'cyan' },
+      border: { type: 'line', fg: colors.border },
       columnSpacing: 3,
       columnWidth: [20, 15]
     });
@@ -92,16 +96,16 @@ export class DashboardScreen {
       scrollbar: {
         ch: '█',
         style: {
-          fg: 'cyan'
+          fg: colors.border
         }
       },
       border: {
         type: 'line'
       },
       style: {
-        fg: 'white',
+        fg: colors.text,
         border: {
-          fg: 'cyan'
+          fg: colors.border
         }
       }
     });
@@ -116,16 +120,16 @@ export class DashboardScreen {
       scrollbar: {
         ch: '█',
         style: {
-          fg: 'cyan'
+          fg: colors.border
         }
       },
       border: {
         type: 'line'
       },
       style: {
-        fg: 'white',
+        fg: colors.text,
         border: {
-          fg: 'cyan'
+          fg: colors.border
         }
       }
     });
@@ -139,22 +143,23 @@ export class DashboardScreen {
       scrollbar: {
         ch: '█',
         style: {
-          fg: 'cyan'
+          fg: colors.border
         }
       },
       border: {
         type: 'line'
       },
       style: {
-        fg: 'white',
+        fg: colors.text,
         border: {
-          fg: 'cyan'
+          fg: colors.border
         }
       }
     });
   }
 
   private setupFooter(): void {
+    const colors = ThemeManager.getColors();
     const footer = blessed.box({
       parent: this.container,
       bottom: 0,
@@ -164,8 +169,8 @@ export class DashboardScreen {
       content: '{center}[S]Start/Stop Service [T]Theme [1-4]Screens [?]Help [R]Refresh [Q]Quit{/}',
       tags: true,
       style: {
-        fg: 'black',
-        bg: 'cyan'
+        fg: colors.statusBar.fg,
+        bg: colors.statusBar.bg
       }
     });
 
