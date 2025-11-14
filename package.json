@@ -10,8 +10,10 @@
     "build": "tsc",
     "start": "npm run build && node dist/service/daemon.js",
     "cli": "npm run build && node dist/cli/index.js",
+    "tui": "npm run build && node dist/tui/index.js",
     "dev": "ts-node src/service/daemon.ts",
     "dev:cli": "ts-node src/cli/index.ts",
+    "dev:tui": "ts-node src/tui/index.ts",
     "watch": "tsc --watch"
   },
   "keywords": ["database", "sync", "replication", "mysql", "postgresql", "real-time"],
@@ -27,7 +29,9 @@
     "node-cron": "^3.0.3",
     "dotenv": "^16.3.1",
     "cli-table3": "^0.6.3",
-    "ora": "^5.4.1"
+    "ora": "^5.4.1",
+    "blessed": "^0.1.81",
+    "blessed-contrib": "^4.11.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.2",
@@ -35,7 +39,8 @@
     "ts-node": "^10.9.2",
     "@types/node": "^20.10.6",
     "@types/inquirer": "^9.0.7",
-    "@types/pg": "^8.10.9"
+    "@types/pg": "^8.10.9",
+    "@types/blessed": "^0.1.25"
   },
   "engines": {
     "node": ">=18.0.0"
