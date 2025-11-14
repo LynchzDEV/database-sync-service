@@ -1,6 +1,6 @@
 # Database Sync Service
 
-![Screen Recording Nov 14 2568 (3)](https://github.com/user-attachments/assets/f841ee04-d4fb-4a35-851a-e079700854af)
+https://github.com/user-attachments/assets/76c4d841-7ec2-4653-8cd1-437eb1e7d849
 
 A real-time one-way database synchronization service with interactive Terminal UI and CLI management. Continuously monitors a source database and synchronizes **all changes** (INSERT, UPDATE, DELETE, schema modifications, and stored procedures) to a target database.
 
