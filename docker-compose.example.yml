@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  db-sync:
+    image: lynchz/db-sync:latest
+    container_name: db-sync-service
+    restart: unless-stopped
+
+    # Run the TUI by default
+    command: node dist/tui/index.js
+
+    # Or run the service daemon
+    # command: node dist/service/daemon.js
+
+    # Or run CLI commands
+    # command: node dist/cli/index.js service start
+
+    # Mount volumes for persistence
+    volumes:
+      - ./config:/app/.db-sync
+      - ./logs:/app/logs
+
+    # Interactive terminal for TUI
+    stdin_open: true
+    tty: true
+
+    # Network mode to access host databases
+    network_mode: host
+
+    # Environment variables (optional)
+    environment:
+      - NODE_ENV=production
+
+    # Health check (optional)
+    # healthcheck:
+    #   test: ["CMD", "node", "dist/cli/index.js", "service", "status"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+
+# Example with source and target PostgreSQL databases
+# Uncomment and modify if you want to run databases in Docker
+
+#   db-source:
+#     image: postgres:17-alpine
+#     container_name: db-sync-source
+#     environment:
+#       POSTGRES_DB: source_db
+#       POSTGRES_USER: postgres
+#       POSTGRES_PASSWORD: postgres
+#     ports:
+#       - "5432:5432"
+#     volumes:
+#       - db-source-data:/var/lib/postgresql/data
+#
+#   db-target:
+#     image: postgres:17-alpine
+#     container_name: db-sync-target
+#     environment:
+#       POSTGRES_DB: target_db
+#       POSTGRES_USER: postgres
+#       POSTGRES_PASSWORD: postgres
+#     ports:
+#       - "5433:5432"
+#     volumes:
+#       - db-target-data:/var/lib/postgresql/data
+
+# volumes:
+#   db-source-data:
+#   db-target-data:

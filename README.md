@@ -80,6 +80,263 @@ npm run cli sync add
 npm run cli service start --daemon
 ```
 
+## 🐳 Docker Deployment
+
+The easiest way to run DB Sync is with Docker. Multi-platform images are available for **amd64** and **arm64** architectures.
+
+### Pull and Run from Docker Hub
+
+```bash
+# Pull the latest image
+docker pull lynchz/db-sync:latest
+
+# Run the Terminal UI
+docker run -it --rm \
+  --network host \
+  -v $(pwd)/config:/app/.db-sync \
+  -v $(pwd)/logs:/app/logs \
+  lynchz/db-sync:latest \
+  node dist/tui/index.js
+
+# Run the daemon service
+docker run -d \
+  --name db-sync-service \
+  --network host \
+  --restart unless-stopped \
+  -v $(pwd)/config:/app/.db-sync \
+  -v $(pwd)/logs:/app/logs \
+  lynchz/db-sync:latest \
+  node dist/service/daemon.js
+
+# Run CLI commands
+docker run -it --rm \
+  --network host \
+  -v $(pwd)/config:/app/.db-sync \
+  lynchz/db-sync:latest \
+  node dist/cli/index.js connection list
+```
+
+### Using Docker Compose (Recommended)
+
+1. **Create `docker-compose.yml`** (or copy from `docker-compose.example.yml`):
+
+```yaml
+version: '3.8'
+
+services:
+  db-sync:
+    image: lynchz/db-sync:latest
+    container_name: db-sync-service
+    restart: unless-stopped
+
+    # Run the TUI by default
+    command: node dist/tui/index.js
+
+    # Or run the service daemon
+    # command: node dist/service/daemon.js
+
+    # Mount volumes for persistence
+    volumes:
+      - ./config:/app/.db-sync
+      - ./logs:/app/logs
+
+    # Interactive terminal for TUI
+    stdin_open: true
+    tty: true
+
+    # Network mode to access host databases
+    network_mode: host
+
+    # Environment variables (optional)
+    environment:
+      - NODE_ENV=production
+```
+
+2. **Start the service:**
+
+```bash
+# Start in foreground (TUI mode)
+docker-compose up
+
+# Start in background (daemon mode)
+# First edit docker-compose.yml to use daemon command
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop the service
+docker-compose down
+```
+
+### Volume Configuration
+
+**Important volumes to mount:**
+
+- **`/app/.db-sync`** - Configuration files (connections, sync pairs, theme)
+- **`/app/logs`** - Log files (combined.log, error.log)
+
+**Example with specific paths:**
+
+```bash
+docker run -it --rm \
+  --network host \
+  -v /home/user/db-sync-config:/app/.db-sync \
+  -v /var/log/db-sync:/app/logs \
+  lynchz/db-sync:latest \
+  node dist/tui/index.js
+```
+
+### Network Configuration
+
+**Option 1: Host Network (Recommended)**
+- Use `--network host` to access databases running on localhost
+- Simplest for local databases or databases on the same host
+
+**Option 2: Bridge Network**
+- Create custom network for container-to-container communication
+- Use when databases are also running in Docker
+
+```bash
+# Create network
+docker network create db-sync-network
+
+# Run with custom network
+docker run -it --rm \
+  --network db-sync-network \
+  -v $(pwd)/config:/app/.db-sync \
+  -v $(pwd)/logs:/app/logs \
+  lynchz/db-sync:latest \
+  node dist/tui/index.js
+```
+
+### Available Image Tags
+
+The following tags are available on Docker Hub (`lynchz/db-sync`):
+
+- **`latest`** - Latest build from main branch (recommended)
+- **`v1.0.0`** - Specific version tags (semantic versioning)
+- **`main`** - Latest build from main branch (same as latest)
+- **`main-<sha>`** - Specific commit builds (e.g., `main-abc1234`)
+
+**Multi-platform support:**
+- **linux/amd64** - Intel/AMD 64-bit processors
+- **linux/arm64** - ARM 64-bit processors (Apple Silicon, Raspberry Pi, AWS Graviton)
+
+### Building Locally
+
+**Build for your platform:**
+
+```bash
+docker build -t db-sync:local .
+```
+
+**Build for multiple platforms:**
+
+```bash
+# Setup buildx (one-time)
+docker buildx create --name multiplatform --use
+docker buildx inspect --bootstrap
+
+# Build multi-platform image
+docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  -t lynchz/db-sync:latest \
+  --push \
+  .
+```
+
+### GitHub Actions Auto-Build
+
+This repository uses GitHub Actions to automatically build and push multi-platform Docker images.
+
+**Triggers:**
+- Push to `main` branch → builds `latest` and `main` tags
+- Push version tag (e.g., `v1.0.0`) → builds version tags
+- Manual workflow dispatch → on-demand builds
+
+**Setup Docker Hub credentials:**
+
+1. Go to repository Settings → Secrets and variables → Actions
+2. Add secrets:
+   - `DOCKER_USERNAME` - Your Docker Hub username
+   - `DOCKER_PASSWORD` - Your Docker Hub access token
+
+**Create version tag:**
+
+```bash
+# Tag a release
+git tag v1.0.0
+git push origin v1.0.0
+
+# GitHub Actions will automatically build and push:
+# - lynchz/db-sync:v1.0.0
+# - lynchz/db-sync:1.0
+# - lynchz/db-sync:1
+# - lynchz/db-sync:latest
+```
+
+### Docker Best Practices
+
+**For Production:**
+- Use specific version tags instead of `latest`
+- Mount volumes for persistent configuration
+- Use `--restart unless-stopped` for auto-recovery
+- Monitor logs with `docker logs` or mount log volume
+- Set resource limits if needed:
+  ```bash
+  docker run -d \
+    --name db-sync \
+    --memory="512m" \
+    --cpus="1.0" \
+    --restart unless-stopped \
+    -v $(pwd)/config:/app/.db-sync \
+    -v $(pwd)/logs:/app/logs \
+    lynchz/db-sync:v1.0.0 \
+    node dist/service/daemon.js
+  ```
+
+**For Development/Testing:**
+- Use `latest` tag for newest features
+- Use `--rm` to auto-remove container after exit
+- Use `-it` for interactive mode (TUI)
+- Mount local config for easy editing
+
+### Docker Troubleshooting
+
+**Container exits immediately:**
+```bash
+# Check logs
+docker logs db-sync-service
+
+# Run in foreground to see output
+docker run -it --rm \
+  --network host \
+  -v $(pwd)/config:/app/.db-sync \
+  lynchz/db-sync:latest \
+  node dist/service/daemon.js
+```
+
+**Cannot connect to databases:**
+- Check network mode (`--network host` for localhost databases)
+- Verify database host is accessible from container
+- Check firewall rules
+- For remote databases, use IP address instead of `localhost`
+
+**Permission issues:**
+```bash
+# Fix volume permissions
+sudo chown -R 1001:1001 ./config ./logs
+
+# Or run with current user (not recommended for production)
+docker run --user $(id -u):$(id -g) ...
+```
+
+**TUI not rendering correctly:**
+- Ensure you use `-it` flags for interactive terminal
+- Check terminal size is adequate (minimum 80x24)
+- Try different terminal emulator if rendering issues persist
+
 ## 📖 Detailed Usage
 
 ### Managing Database Connections
