@@ -5,11 +5,11 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY package.json package-lock.json ./
 COPY tsconfig.json ./
 
 # Install dependencies
-RUN npm ci
+RUN npm ci --prefer-offline --no-audit
 
 # Copy source code
 COPY src ./src
@@ -31,10 +31,10 @@ RUN addgroup -g 1001 -S dbsync && \
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY package.json package-lock.json ./
 
 # Install production dependencies only
-RUN npm ci --omit=dev && \
+RUN npm ci --prefer-offline --no-audit --omit=dev && \
     npm cache clean --force
 
 # Copy built files from builder
