@@ -65,8 +65,8 @@ export class TUIApp {
       }
     });
 
-    // Toggle theme
-    this.screen.key(['t'], () => {
+    // Toggle theme (Shift+T)
+    this.screen.key(['S-t'], () => {
       this.toggleTheme();
     });
   }

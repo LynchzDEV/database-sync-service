@@ -6,6 +6,7 @@ export class ConnectionsScreen {
   private container: blessed.Widgets.BoxElement;
   private list!: blessed.Widgets.ListElement;
   private details!: blessed.Widgets.BoxElement;
+  private selectedConnection: string = '';
 
   constructor(private screen: blessed.Widgets.Screen, private app: any) {
     this.container = blessed.box({
@@ -84,7 +85,7 @@ export class ConnectionsScreen {
       left: 0,
       width: '100%',
       height: 1,
-      content: '{center}[Enter]Select [T]Test [D]Delete [A]Add [←]Back{/}',
+      content: '{center}[Enter]Select [t]Test [d]Delete [a]Add [←]Back{/}',
       tags: true,
       style: { fg: colors.statusBar.fg, bg: colors.statusBar.bg }
     });
@@ -95,6 +96,7 @@ export class ConnectionsScreen {
   private setupEvents(): void {
     this.list.on('select', (item) => {
       const name = item.content.split(' ')[0];
+      this.selectedConnection = name;
       const conn = configManager.getConnection(name);
       if (conn) {
         this.details.setContent(
@@ -113,6 +115,28 @@ export class ConnectionsScreen {
 
     this.list.key(['left', 'escape'], () => {
       this.app.showScreen('dashboard');
+    });
+
+    // Add connection (a key)
+    this.list.key(['a'], () => {
+      this.details.setContent('\n  {yellow-fg}Add connection feature coming soon!{/}\n  {cyan-fg}Use CLI: npm run cli connection add{/}');
+      this.screen.render();
+    });
+
+    // Test connection (t key)
+    this.list.key(['t'], () => {
+      if (this.selectedConnection) {
+        this.details.setContent(`\n  {yellow-fg}Testing connection: ${this.selectedConnection}...{/}\n  {cyan-fg}Use CLI: npm run cli connection test ${this.selectedConnection}{/}`);
+        this.screen.render();
+      }
+    });
+
+    // Delete connection (d key)
+    this.list.key(['d'], () => {
+      if (this.selectedConnection) {
+        this.details.setContent(`\n  {yellow-fg}Delete connection: ${this.selectedConnection}{/}\n  {cyan-fg}Use CLI: npm run cli connection remove ${this.selectedConnection}{/}`);
+        this.screen.render();
+      }
     });
   }
 

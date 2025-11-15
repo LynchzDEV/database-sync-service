@@ -166,7 +166,7 @@ export class DashboardScreen {
       left: 0,
       width: '100%',
       height: 1,
-      content: '{center}[S]Start/Stop Service [T]Theme [1-4]Screens [?]Help [R]Refresh [Q]Quit{/}',
+      content: '{center}[s]Start/Stop Service [Shift+t]Theme [1-4]Screens [?]Help [r]Refresh [q]Quit{/}',
       tags: true,
       style: {
         fg: colors.statusBar.fg,

@@ -6,6 +6,7 @@ export class SyncPairsScreen {
   private container: blessed.Widgets.BoxElement;
   private list!: blessed.Widgets.ListElement;
   private details!: blessed.Widgets.BoxElement;
+  private selectedPair: string = '';
 
   constructor(private screen: blessed.Widgets.Screen, private app: any) {
     this.container = blessed.box({
@@ -74,7 +75,7 @@ export class SyncPairsScreen {
       left: 0,
       width: '100%',
       height: 1,
-      content: '{center}[Enter]Select [E]Enable/Disable [D]Delete [A]Add [←]Back{/}',
+      content: '{center}[Enter]Select [e]Enable/Disable [d]Delete [a]Add [←]Back{/}',
       tags: true,
       style: { fg: colors.statusBar.fg, bg: colors.statusBar.bg }
     });
@@ -85,6 +86,7 @@ export class SyncPairsScreen {
   private setupEvents(): void {
     this.list.on('select', (item) => {
       const name = item.content.split(' ')[0];
+      this.selectedPair = name;
       const pair = configManager.getSyncPair(name);
       if (pair) {
         this.details.setContent(
@@ -105,6 +107,32 @@ export class SyncPairsScreen {
 
     this.list.key(['left', 'escape'], () => {
       this.app.showScreen('dashboard');
+    });
+
+    // Add sync pair (a key)
+    this.list.key(['a'], () => {
+      this.details.setContent('\n  {yellow-fg}Add sync pair feature coming soon!{/}\n  {cyan-fg}Use CLI: npm run cli sync add{/}');
+      this.screen.render();
+    });
+
+    // Enable/Disable sync pair (e key)
+    this.list.key(['e'], () => {
+      if (this.selectedPair) {
+        const pair = configManager.getSyncPair(this.selectedPair);
+        if (pair) {
+          const action = pair.enabled ? 'disable' : 'enable';
+          this.details.setContent(`\n  {yellow-fg}${action} sync pair: ${this.selectedPair}{/}\n  {cyan-fg}Use CLI: npm run cli sync ${action} ${this.selectedPair}{/}`);
+          this.screen.render();
+        }
+      }
+    });
+
+    // Delete sync pair (d key)
+    this.list.key(['d'], () => {
+      if (this.selectedPair) {
+        this.details.setContent(`\n  {yellow-fg}Delete sync pair: ${this.selectedPair}{/}\n  {cyan-fg}Use CLI: npm run cli sync remove ${this.selectedPair}{/}`);
+        this.screen.render();
+      }
     });
   }
 
